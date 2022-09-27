@@ -1,0 +1,6 @@
+{
+  "name": "Conductor Live to CMs",
+  "description": "For the conductor Hackathon, a simple interface to commit changes to a CMS",
+  "version": "0.0.1",
+  "manifest_version": 3
+}
