@@ -4,9 +4,27 @@ const PAGE_INFO_MSG = 'PAGE_INFO_MSG';
 
 
 const $pageStatus = document.getElementById('page_status');
+const $pageTitle = document.getElementById('page_title');
+const $pageText = document.getElementById('page_text');
 function updatePageStatus(text) {
     $pageStatus.innerText = text;
 }
+
+function updatePageTitle(idInfo, url) {
+    const { protocol, hostname } = new URL(url);
+    const apiMethod = idInfo.isPost ? 'posts' : 'pages';
+    fetch(`${protocol}//${hostname}/wp-json/wp/v2/${apiMethod}?include[]=${idInfo.id}`).then(function (response) {
+        // The API call was successful!
+        return response.json();
+    }).then(function (data) {
+        console.log(data);
+        $pageTitle.innerText = data[0].title.rendered;
+        $pageText.innerText = data[0].content.rendered;
+    }).catch(function (err) {
+        console.warn('Something went wrong.', err);
+    });
+}
+
 function checkIfIsWordpressPageOrPost(classStr) {
     // determine if these classes meet the threshold for a wordpress page
     const hasPageId = classStr.includes(CLASS_PAGE_ID_STR);
@@ -46,6 +64,10 @@ async function handleBtnClick() {
             clearTimeout(errorTimeoutId);
             const isWordpressWebsites = response.scriptsLoaded.includes('wp-content');
             const isAWPPost = checkIfIsWordpressPageOrPost(response.bodyClasses);
+            if (!isWordpressWebsites) {
+                updatePageStatus('This is not a wordpress website');
+                return;
+            }
             if(isWordpressWebsites && !isAWPPost) {
                 updatePageStatus('This seems to be a wordpress website, but for now this only works on the single posts and pages');
                 return;
@@ -54,10 +76,16 @@ async function handleBtnClick() {
                 updatePageStatus('Not wordpress!!! This can only run on Wordpress Pages for now!');
                 return;
             }
-            const idInfo = getPostOrPageId(response.bodyClasses);
+            const idInfo = getPostOrPageId(response.bodyClasses, response.href);
             updatePageStatus(`This is a wordpress ${idInfo.isPost ? 'POST' : 'PAGE'} with the ID: ${idInfo.id}`);
+            updatePageTitle(idInfo, response.href)
         });
     });
 }
 
+async function handleUpdatePageBtn() {
+
+}
+
 document.getElementById('check_action_button').addEventListener('click', handleBtnClick);
+document.getElementById('update_page').addEventListener('click', handleBtnClick);
