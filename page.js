@@ -7,7 +7,7 @@
             sendResponse({
                 bodyClasses: document.body.className,
                 href: window.location.href,
-                scriptsLoaded: scriptsSrcArr
+                scriptsLoaded: scriptsSrcArr.join(' ')
             });
         }
     });

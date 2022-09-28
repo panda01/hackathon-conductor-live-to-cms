@@ -12,8 +12,6 @@ function checkIfIsWordpressPageOrPost(classStr) {
     const hasPageId = classStr.includes(CLASS_PAGE_ID_STR);
     const hasPostId = classStr.includes(CLASS_POST_ID_STR);
     return hasPageId || hasPostId;
-    // update the popup.html to tell the user if the page is available
-    // document.getElementById('page_status').innerHTML = 'This is an update by script';
 }
 function getPostOrPageId(bodyClasses) {
     // split the classes into an array
@@ -29,7 +27,6 @@ function getPostOrPageId(bodyClasses) {
     const isPost = matchingStr.includes(CLASS_POST_ID_STR);
     const stringForLength = isPost ? CLASS_POST_ID_STR : CLASS_PAGE_ID_STR;
     const idStr = matchingStr.substring(stringForLength.length);
-    updatePageStatus('idStr: ' + idStr);
     const id = parseInt(idStr, 10);
     // return an object like
     // { isPost: boolean, id: number }
@@ -41,9 +38,18 @@ function getPostOrPageId(bodyClasses) {
 
 async function handleBtnClick() {
     updatePageStatus('Loading...');
+    const errorTimeoutId = setTimeout(function() {
+        updatePageStatus('There was an error, reload the page and try again!');
+    }, 3000);
     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
         chrome.tabs.sendMessage(tabs[0].id, {msg: PAGE_INFO_MSG}, function(response) {
+            clearTimeout(errorTimeoutId);
+            const isWordpressWebsites = response.scriptsLoaded.includes('wp-content');
             const isAWPPost = checkIfIsWordpressPageOrPost(response.bodyClasses);
+            if(isWordpressWebsites && !isAWPPost) {
+                updatePageStatus('This seems to be a wordpress website, but for now this only works on the single posts and pages');
+                return;
+            }
             if(!isAWPPost) {
                 updatePageStatus('Not wordpress!!! This can only run on Wordpress Pages for now!');
                 return;
