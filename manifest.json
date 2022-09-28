@@ -1,6 +1,16 @@
 {
-  "name": "Conductor Live to CMs",
-  "description": "For the conductor Hackathon, a simple interface to commit changes to a CMS",
+  "name": "Conductor Live to CMS",
+  "description": "For the Conductor Hackathon, a simple interface to commit changes to a CMS by Andrii Hedz, Dana Cormier, & Khalah Jones-Golden",
   "version": "0.0.1",
-  "manifest_version": 3
+  "manifest_version": 3,
+  "permissions": ["scripting", "activeTab"],
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["page.js"]
+    }
+  ],
+  "action": {
+      "default_popup": "popup.html"
+  }
 }
