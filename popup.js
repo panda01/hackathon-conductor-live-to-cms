@@ -6,6 +6,7 @@ const PAGE_INFO_MSG = 'PAGE_INFO_MSG';
 const $pageStatus = document.getElementById('page_status');
 const $pageTitle = document.getElementById('page_title');
 const $pageText = document.getElementById('page_text');
+
 function updatePageStatus(text) {
     $pageStatus.innerText = text;
 }
@@ -13,13 +14,14 @@ function updatePageStatus(text) {
 function updatePageTitle(idInfo, url) {
     const { protocol, hostname } = new URL(url);
     const apiMethod = idInfo.isPost ? 'posts' : 'pages';
-    fetch(`${protocol}//${hostname}/wp-json/wp/v2/${apiMethod}?include[]=${idInfo.id}`).then(function (response) {
-        // The API call was successful!
-        return response.json();
-    }).then(function (data) {
+    fetch(`https://conductor-live-to-cms-proxy.herokuapp.com/article?wpHost=${url}&articleId=${idInfo.id}&isPost=${idInfo.isPost}`)
+        .then(function (response) {
+            // The API call was successful!
+            return response.json();
+        }).then(function (data) {
         console.log(data);
-        $pageTitle.innerText = data[0].title.rendered;
-        $pageText.innerText = data[0].content.rendered;
+        $pageTitle.innerText = data.title;
+        $pageText.innerText = data.content;
     }).catch(function (err) {
         console.warn('Something went wrong.', err);
     });
@@ -31,11 +33,12 @@ function checkIfIsWordpressPageOrPost(classStr) {
     const hasPostId = classStr.includes(CLASS_POST_ID_STR);
     return hasPageId || hasPostId;
 }
+
 function getPostOrPageId(bodyClasses) {
     // split the classes into an array
     const classArr = bodyClasses.split(' ');
     // go through each one and find the proper string
-    const matchingStr = classArr.reduce(function(prev, curr) {
+    const matchingStr = classArr.reduce(function (prev, curr) {
         if (prev) {
             return prev;
         }
@@ -56,11 +59,11 @@ function getPostOrPageId(bodyClasses) {
 
 async function handleBtnClick() {
     updatePageStatus('Loading...');
-    const errorTimeoutId = setTimeout(function() {
+    const errorTimeoutId = setTimeout(function () {
         updatePageStatus('There was an error, reload the page and try again!');
     }, 3000);
-    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-        chrome.tabs.sendMessage(tabs[0].id, {msg: PAGE_INFO_MSG}, function(response) {
+    chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, {msg: PAGE_INFO_MSG}, function (response) {
             clearTimeout(errorTimeoutId);
             const isWordpressWebsites = response.scriptsLoaded.includes('wp-content');
             const isAWPPost = checkIfIsWordpressPageOrPost(response.bodyClasses);
@@ -68,11 +71,11 @@ async function handleBtnClick() {
                 updatePageStatus('This is not a wordpress website');
                 return;
             }
-            if(isWordpressWebsites && !isAWPPost) {
+            if (isWordpressWebsites && !isAWPPost) {
                 updatePageStatus('This seems to be a wordpress website, but for now this only works on the single posts and pages');
                 return;
             }
-            if(!isAWPPost) {
+            if (!isAWPPost) {
                 updatePageStatus('Not wordpress!!! This can only run on Wordpress Pages for now!');
                 return;
             }
