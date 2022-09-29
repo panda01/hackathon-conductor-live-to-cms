@@ -12,8 +12,6 @@ function updatePageStatus(text) {
 }
 
 function updatePageTitle(idInfo, url) {
-    const { protocol, hostname } = new URL(url);
-    const apiMethod = idInfo.isPost ? 'posts' : 'pages';
     fetch(`https://conductor-live-to-cms-proxy.herokuapp.com/article?wpHost=${url}&articleId=${idInfo.id}&isPost=${idInfo.isPost}`)
         .then(function (response) {
             // The API call was successful!
