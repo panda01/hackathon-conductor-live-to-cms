@@ -55,27 +55,30 @@ function getPostOrPageId(bodyClasses) {
 }
 
 async function handleBtnClick() {
+    // set the status to loading
     updatePageStatus('Loading...');
+    // set up an error for the rare cases where this just fails
     const errorTimeoutId = setTimeout(function() {
         updatePageStatus('There was an error, reload the page and try again!');
     }, 3000);
+    // Get the current page tab you're on.
     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
         chrome.tabs.sendMessage(tabs[0].id, {msg: PAGE_INFO_MSG}, function(response) {
+            // didn't error out and got a message back, so stop the error message
             clearTimeout(errorTimeoutId);
+            // Simple check, should work unless someone changes the default directory
             const isWordpressWebsites = response.scriptsLoaded.includes('wp-content');
-            const isAWPPost = checkIfIsWordpressPageOrPost(response.bodyClasses);
-            if (!isWordpressWebsites) {
-                updatePageStatus('This is not a wordpress website');
+            if(!isWordpressWebsites) {
+                updatePageStatus('Not wordpress!!! This can only run on Wordpress Pages for now!');
                 return;
             }
+            // check and see if this is a page or post
+            const isAWPPost = checkIfIsWordpressPageOrPost(response.bodyClasses);
             if(isWordpressWebsites && !isAWPPost) {
                 updatePageStatus('This seems to be a wordpress website, but for now this only works on the single posts and pages');
                 return;
             }
-            if(!isAWPPost) {
-                updatePageStatus('Not wordpress!!! This can only run on Wordpress Pages for now!');
-                return;
-            }
+            // get the id from the current post or page
             const idInfo = getPostOrPageId(response.bodyClasses, response.href);
             updatePageStatus(`This is a wordpress ${idInfo.isPost ? 'POST' : 'PAGE'} with the ID: ${idInfo.id}`);
             updatePageTitle(idInfo, response.href)
