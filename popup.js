@@ -1,28 +1,40 @@
 const CLASS_PAGE_ID_STR = 'page-id-';
 const CLASS_POST_ID_STR = 'postid-';
 const PAGE_INFO_MSG = 'PAGE_INFO_MSG';
+const COND_WP_PROXY_URL = 'https://conductor-live-to-cms-proxy.herokuapp.com:443/article';
 
 
 const $pageStatus = document.getElementById('page_status');
-const $pageTitle = document.getElementById('page_title');
-const $pageText = document.getElementById('page_text');
+const $titleInput = document.getElementById('page_title');
+const $contentInput = document.getElementById('the_content');
+const $contentWrapper = document.getElementById('body_wrapper');
+const $validBlock = document.getElementById('valid_wp_content_block');
+
 function updatePageStatus(text) {
     $pageStatus.innerText = text;
 }
 
-function updatePageTitle(idInfo, url) {
-    const { protocol, hostname } = new URL(url);
-    const apiMethod = idInfo.isPost ? 'posts' : 'pages';
-    fetch(`${protocol}//${hostname}/wp-json/wp/v2/${apiMethod}?include[]=${idInfo.id}`).then(function (response) {
-        // The API call was successful!
-        return response.json();
-    }).then(function (data) {
-        console.log(data);
-        $pageTitle.innerText = data[0].title.rendered;
-        $pageText.innerText = data[0].content.rendered;
-    }).catch(function (err) {
-        console.warn('Something went wrong.', err);
-    });
+function getPageContentAndTitle(idInfo, url) {
+    const { origin } = new URL(url);
+    const reqData = {
+        wpHost: `${origin}`,
+        articleId: idInfo.id,
+        isPost: idInfo.isPost
+    };
+    const urlToFetch = `${COND_WP_PROXY_URL}?${new URLSearchParams(reqData)}`
+    fetch(urlToFetch, { method: 'GET' })
+        .then(function (response) {
+            // The API call was successful!
+            return response.json();
+        })
+        .then(function (data) {
+            $validBlock.style.display = 'block';
+            $titleInput.value = data.title;
+            $contentInput.value = data.content;
+        })
+        .catch(function (err) {
+            console.warn('Something went wrong.', err);
+        });
 }
 
 function checkIfIsWordpressPageOrPost(classStr) {
@@ -54,7 +66,7 @@ function getPostOrPageId(bodyClasses) {
     }
 }
 
-async function handleBtnClick() {
+async function handleBtnClick(evt) {
     // set the status to loading
     updatePageStatus('Loading...');
     // set up an error for the rare cases where this just fails
@@ -75,13 +87,12 @@ async function handleBtnClick() {
             // check and see if this is a page or post
             const isAWPPost = checkIfIsWordpressPageOrPost(response.bodyClasses);
             if(isWordpressWebsites && !isAWPPost) {
-                updatePageStatus('This seems to be a wordpress website, but for now this only works on the single posts and pages');
+                updatePageStatus('This seems to be a wordpress website, but for now this only works on the single posts and pages, please navigate to one to edit it');
                 return;
             }
             // get the id from the current post or page
             const idInfo = getPostOrPageId(response.bodyClasses, response.href);
-            updatePageStatus(`This is a wordpress ${idInfo.isPost ? 'POST' : 'PAGE'} with the ID: ${idInfo.id}`);
-            updatePageTitle(idInfo, response.href)
+            getPageContentAndTitle(idInfo, response.href)
         });
     });
 }
@@ -91,4 +102,4 @@ async function handleUpdatePageBtn() {
 }
 
 document.getElementById('check_action_button').addEventListener('click', handleBtnClick);
-document.getElementById('update_page').addEventListener('click', handleBtnClick);
+// document.getElementById('update_page').addEventListener('click', handleBtnClick);

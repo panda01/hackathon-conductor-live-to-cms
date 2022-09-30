@@ -1,15 +1,42 @@
 <!DOCTYPE html>
 <html>
   <head>
+      <link rel="stylesheet" href="popup.css">
   </head>
   <body>
-      <h1>Welcome to Conductor live for CMS</h1>
-      <button id="check_action_button">Click here to check if this page is a Wordpress Page</button>
-      <div id="page_status">You must click the button to tell if a page is Wordpress or not</div>
+      <div class="header">
+          <div class="tab">Live Editor</div>
+          <div class="tab selected">Wordpress Mode</div>
+      </div>
+      <div class="body" id="body_wrapper">
+          <div class="content_block" id="starting_content_block">
+              <div class="title">Load the Content for this page</div>
+              <div class="content">
+                  <div id="page_status">Click the button below to Load the content for this page</div>
+                  <button class="btn" id="check_action_button">Get the content for this page</button>
+              </div>
 
-      <div id="page_title"></div>
-      <div id="page_text"></div>
+          </div>
+          <div class="content_block" id="valid_wp_content_block">
+              <div class="title">Content</div>
+              <div class="content">
+                  <div class="input_wrapper">
+                      <label for="page_title">Title</label>
+                      <input type="text" name="page_title" id="page_title" />
+                  </div>
+                  <div class="input_wrapper">
+                      <label for="the_content">Content</label>
+                      <textarea name="the_content" id="the_content"></textarea>
+                  </div>
+              </div>
 
+          </div>
+      </div>
+      <div class="footer">
+          <button class="btn secondary" id="js_publish">Publish in JS</button>
+          <button class="btn" id="wp_publish">Publish Changes to Wordpress</button>
+          <button class="btn" id="reset">Reset</button>
+      </div>
       <script src="popup.js"></script>
   </body>
 </html>
