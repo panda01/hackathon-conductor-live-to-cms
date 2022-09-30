@@ -43,11 +43,12 @@ function checkIfIsWordpressPageOrPost(classStr) {
     const hasPostId = classStr.includes(CLASS_POST_ID_STR);
     return hasPageId || hasPostId;
 }
+
 function getPostOrPageId(bodyClasses) {
     // split the classes into an array
     const classArr = bodyClasses.split(' ');
     // go through each one and find the proper string
-    const matchingStr = classArr.reduce(function(prev, curr) {
+    const matchingStr = classArr.reduce(function (prev, curr) {
         if (prev) {
             return prev;
         }
