@@ -10,18 +10,18 @@ const $contentInput = document.getElementById('the_content');
 const $contentWrapper = document.getElementById('body_wrapper');
 const $validBlock = document.getElementById('valid_wp_content_block');
 
+const currPageInfo = {
+    articleId: null,
+    isPost: null,
+    wpHost: null
+};
+
 function updatePageStatus(text) {
-    $pageStatus.innerText = text;
+    $pageStatus.innerText += '\n' + text;
 }
 
-function getPageContentAndTitle(idInfo, url) {
-    const { origin } = new URL(url);
-    const reqData = {
-        wpHost: `${origin}`,
-        articleId: idInfo.id,
-        isPost: idInfo.isPost
-    };
-    const urlToFetch = `${COND_WP_PROXY_URL}?${new URLSearchParams(reqData)}`
+function getPageContentAndTitle(pageInfoObj) {
+    const urlToFetch = `${COND_WP_PROXY_URL}?${new URLSearchParams(pageInfoObj)}`
     fetch(urlToFetch, { method: 'GET' })
         .then(function (response) {
             // The API call was successful!
@@ -33,7 +33,37 @@ function getPageContentAndTitle(idInfo, url) {
             $contentInput.value = data.content;
         })
         .catch(function (err) {
-            console.warn('Something went wrong.', err);
+            console.warn('Something went wrong with the GET', err);
+        });
+}
+
+function updatePageContentAndTitle(pageInfoObj) {
+    const reqData = {
+        ...pageInfoObj,
+        content: $contentInput.value,
+        password: "BfR3pgknSy4vYIsEBYzQUBCc",
+        title: $titleInput.value,
+        user: "ahedz",
+    }
+    updatePageStatus(JSON.stringify(reqData));
+    fetch(COND_WP_PROXY_URL, {
+        method: 'POST',
+        body: JSON.stringify(reqData),
+        mode: 'no-cors',
+        headers: {
+            'Content-Type': 'application/json',
+            'accept': '*/*'
+        },
+    })
+        .then(function (response) {
+            // The API call was successful!
+            return response;
+        })
+        .then(function (data) {
+            updatePageStatus(data);
+        })
+        .catch(function (err) {
+            updatePageStatus('Something went wrong with the POST', err);
         });
 }
 
@@ -67,7 +97,7 @@ function getPostOrPageId(bodyClasses) {
     }
 }
 
-async function handleBtnClick(evt) {
+async function handleGetContentClick(evt) {
     // set the status to loading
     updatePageStatus('Loading...');
     // set up an error for the rare cases where this just fails
@@ -93,14 +123,17 @@ async function handleBtnClick(evt) {
             }
             // get the id from the current post or page
             const idInfo = getPostOrPageId(response.bodyClasses, response.href);
-            getPageContentAndTitle(idInfo, response.href)
+            currPageInfo.isPost = idInfo.isPost;
+            currPageInfo.articleId = idInfo.id;
+            currPageInfo.wpHost = (new URL(response.href)).origin;
+            getPageContentAndTitle(currPageInfo);
         });
     });
 }
-
-async function handleUpdatePageBtn() {
-
+function handleUpdateClick() {
+    updatePageContentAndTitle(currPageInfo);
 }
 
-document.getElementById('check_action_button').addEventListener('click', handleBtnClick);
-// document.getElementById('update_page').addEventListener('click', handleBtnClick);
+
+document.getElementById('check_action_button').addEventListener('click', handleGetContentClick);
+document.getElementById('wp_publish').addEventListener('click', handleUpdateClick);
