@@ -45,22 +45,23 @@ function updatePageContentAndTitle(pageInfoObj) {
         title: $titleInput.value,
         user: "ahedz",
     }
-    updatePageStatus(JSON.stringify(reqData));
+    const data = JSON.stringify(reqData);
+    updatePageStatus(data);
+
     fetch(COND_WP_PROXY_URL, {
         method: 'POST',
-        body: JSON.stringify(reqData),
-        mode: 'no-cors',
         headers: {
-            'Content-Type': 'application/json',
-            'accept': '*/*'
+            'Accept': 'application/json, text/plain, */*',
+            'Content-Type': 'application/json;charset=UTF-8'
         },
+        body: data,
     })
         .then(function (response) {
             // The API call was successful!
             return response;
         })
         .then(function (data) {
-            updatePageStatus(data);
+            updatePageStatus(JSON.stringify(data.status));
         })
         .catch(function (err) {
             updatePageStatus('Something went wrong with the POST', err);
